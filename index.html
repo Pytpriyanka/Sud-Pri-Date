@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>I have a question for you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5aed0;
+    --streak: .9;
+    --panel: #fff6e6;
+    --ink: #4a2c22;
+    --muted: #7b5446;
+    --yes: #ff6f9f;
+    --yes-ink: #3b1d14;
+    --no: #e7c9a9;
+    --no-ink: #4a2c22;
+    --t-fill: #fff6d6;
+    --t-stroke: #4a2c22;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #3a1e29;
+      --streak: .1;
+      --panel: #4d2f2c;
+      --ink: #ffe9ef;
+      --muted: #e3bfb5;
+      --yes: #ff8fb8;
+      --yes-ink: #3b1d14;
+      --no: #6e4a3a;
+      --no-ink: #ffe9ef;
+      --t-fill: #ffe9ef;
+      --t-stroke: #1f0f0a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #3a1e29; --streak: .1; --panel: #4d2f2c; --ink: #ffe9ef; --muted: #e3bfb5;
+    --yes: #ff8fb8; --yes-ink: #3b1d14; --no: #6e4a3a; --no-ink: #ffe9ef;
+    --t-fill: #ffe9ef; --t-stroke: #1f0f0a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { min-height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Pixelify Sans", "Courier New", ui-monospace, monospace;
+    display: grid;
+    place-items: center;
+    padding: 24px 18px 40px;
+    overflow-x: hidden;
+    position: relative;
+  }
+  /* crayon streaks, like a pastel-scribbled pink page */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    opacity: var(--streak);
+    background-size: 400px 400px;
+    background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.45' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1.6 0 0 0 -0.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .deco { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .deco > * { position: absolute; }
+
+  .stage {
+    position: relative; z-index: 1;
+    width: min(94vw, 460px);
+    text-align: center;
+  }
+  .stage.shake { animation: shake .4s steps(4); }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    50% { transform: translateX(10px); }
+    75% { transform: translateX(-6px); }
+  }
+
+  /* the cat sticker: pixel art with a white die-cut border */
+  .sticker {
+    width: min(62vw, 250px);
+    margin: 0 auto 6px;
+    filter:
+      drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff)
+      drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff)
+      drop-shadow(0 10px 8px rgba(74, 44, 34, .28));
+    animation: hop 1.4s steps(1) infinite;
+  }
+  .sticker svg { display: block; width: 100%; height: auto; }
+  @keyframes hop { 0% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+  .hey { font-size: 22px; font-weight: 600; margin: 10px 0 6px; }
+
+  h1 {
+    margin: 0 0 14px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--t-fill);
+    text-shadow:
+      -3px 0 var(--t-stroke), 3px 0 var(--t-stroke), 0 -3px var(--t-stroke), 0 3px var(--t-stroke),
+      -3px -3px var(--t-stroke), 3px -3px var(--t-stroke), -3px 3px var(--t-stroke), 3px 3px var(--t-stroke),
+      5px 7px 0 var(--t-stroke);
+  }
+  h1.q { font-size: clamp(30px, 8.6vw, 44px); min-height: 2.4em; display: grid; place-items: center; }
+  h1.yay { font-size: clamp(30px, 8.6vw, 42px); }
+
+  .row { display: flex; gap: 22px; justify-content: center; align-items: center; min-height: 84px; }
+  button {
+    font: inherit; font-weight: 700; font-size: 21px;
+    padding: 12px 26px;
+    border: 3px solid var(--ink);
+    border-radius: 0;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 var(--ink);
+    transition: translate .08s steps(2), box-shadow .08s steps(2);
+  }
+  button:active { translate: 3px 3px; box-shadow: 1px 1px 0 var(--ink); }
+  button:focus-visible { outline: 3px dashed var(--ink); outline-offset: 5px; }
+  #yes { background: var(--yes); color: var(--yes-ink); scale: var(--ys, 1); }
+  #no { background: var(--no); color: var(--no-ink); scale: var(--ns, 1); }
+
+  .counter { font-size: 15px; color: var(--ink); margin: 14px 0 0; min-height: 1.3em; opacity: .85; }
+
+  .panel {
+    background: var(--panel);
+    border: 3px solid var(--ink);
+    box-shadow: 5px 5px 0 var(--ink);
+    padding: 16px 18px 14px;
+    margin: 0 auto 20px;
+    text-align: left;
+    max-width: 380px;
+  }
+  .panel .item { display: flex; gap: 12px; padding: 9px 0; border-bottom: 2px dotted color-mix(in srgb, var(--ink) 35%, transparent); }
+  .panel .item:last-child { border-bottom: 0; }
+  .panel b { min-width: 58px; color: var(--yes); -webkit-text-stroke: .4px var(--ink); }
+  .panel .hint { display: block; margin-top: 4px; font-size: 14px; color: var(--muted); }
+  .yaysub { margin: 0 0 16px; font-size: 18px; font-weight: 600; }
+
+  .answer { display: none; }
+  .done .answer { display: block; }
+  .done .ask { display: none; }
+
+  .reply {
+    display: inline-block; text-decoration: none;
+    background: var(--yes); color: var(--yes-ink);
+    border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
+    font-weight: 700; padding: 12px 22px;
+  }
+
+  .heart {
+    position: fixed; bottom: -50px; pointer-events: none; z-index: 10;
+    animation: rise var(--d, 3s) steps(40) forwards;
+  }
+  .heart svg { display: block; width: 100%; height: auto; }
+  @keyframes rise { to { transform: translateY(-115vh); opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sticker, .stage.shake { animation: none; }
+    button { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deco" id="deco" aria-hidden="true"></div>
+
+<main class="stage" id="stage">
+  <div class="sticker" id="sticker" role="img" aria-label="A cute pixel cat holding a flower"></div>
+
+  <div class="ask">
+    <p class="hey" id="title">Hey Babe,</p>
+    <h1 class="q" id="q">Will you go on a date with me?</h1>
+    <div class="row">
+      <button id="yes" type="button">Yes!</button>
+      <button id="no" type="button">No</button>
+    </div>
+    <p class="counter" id="counter"></p>
+  </div>
+
+  <div class="answer">
+    <h1 class="yay" id="yayTitle">Yay! It's a date!</h1>
+    <p class="yaysub" id="yaySub">Here are the details:</p>
+    <div class="panel" id="details"></div>
+    <div id="replyWrap"></div>
+  </div>
+</main>
+
+<script>
+  /* ====== EDIT THESE ====== */
+  const CONFIG = {
+    hisName: "Babe",                      // what you call him
+    yourName: "Me",                       // your name or nickname
+    plan: "Dinner and a walk",            // what you'll do
+    when: "Friday, 16 October 2026",     // add a time if you like, e.g. "... , 7:00 PM"
+    where: "A place I'll surprise you with",
+    note: "Wear something which will make my heart explode 💥",
+    noteHint: "(hint: anything you wear will make my heart explode, hehehe)",
+    replyLink: ""                         // optional, e.g. "https://wa.me/91XXXXXXXXXX?text=Yes!%20See%20you%20there" or "sms:+91XXXXXXXXXX"
+  };
+  /* ======================== */
+
+  /*SPRITES*/
+  const PAL = {
+    o: '#4a2c22', w: '#fff8f2', g: '#c9c3d3', p: '#f48fb1', m: '#ffb1c6', k: '#3a1d14',
+    c: '#ffffff', y: '#ffd966', l: '#6bbf8a', h: '#e8456b', t: '#ff7a9a', b: '#8ecae6', f: '#ffa1bd',
+    a: '#62c4a8', r: '#ff8fb1', n: '#8a5f52'
+  };
+  const W = 32, H = 34;
+  const blank = () => Array.from({ length: H }, () => Array(W).fill('.'));
+  const inEll = (x, y, cx, cy, rx, ry) => {
+    const dx = (x + .5 - cx) / rx, dy = (y + .5 - cy) / ry;
+    return dx * dx + dy * dy <= 1;
+  };
+  // ear rows: [y, xStart, xEnd] for the left ear; the right ear is mirrored
+  const EAR = [[1,4,5],[2,4,6],[3,4,8],[4,5,9],[5,5,11],[6,6,13],[7,7,14],[8,7,15]];
+  const EAR_IN = [[4,6,7],[5,6,8],[6,7,10],[7,8,11]];
+
+  function catGrid(mood) {
+    const g = blank();
+    const put = (x, y, c) => { if (x >= 0 && x < W && y >= 0 && y < H) g[y][x] = c; };
+    const blk = (x, y, w, h, c) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) put(x + i, y + j, c); };
+
+    // body + head, gray cap on top
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (inEll(x, y, 16, 28, 8.5, 6) || inEll(x, y, 16, 14.5, 12, 9.5)) g[y][x] = y <= 10 ? 'g' : 'w';
+    }
+    EAR.forEach(([y, a, b]) => { for (let x = a; x <= b; x++) { g[y][x] = 'g'; g[y][31 - x] = 'g'; } });
+    EAR_IN.forEach(([y, a, b]) => { for (let x = a; x <= b; x++) { g[y][x] = 'p'; g[y][31 - x] = 'p'; } });
+    for (let y = 5; y <= 11; y++) for (let x = 14; x <= 17; x++) if (g[y][x] !== '.') g[y][x] = 'w';
+
+    // brown outline around the whole silhouette
+    const edge = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (g[y][x] !== '.') continue;
+      if ((y > 0 && g[y-1][x] !== '.') || (y < H-1 && g[y+1][x] !== '.') ||
+          (x > 0 && g[y][x-1] !== '.') || (x < W-1 && g[y][x+1] !== '.')) edge.push([x, y]);
+    }
+    edge.forEach(([x, y]) => { g[y][x] = 'o'; });
+
+    // eyes
+    const eye = x => { blk(x, 13, 3, 4, 'k'); put(x, 13, 'c'); };
+    const arc = x => { put(x, 15, 'k'); put(x + 1, 14, 'k'); put(x + 2, 15, 'k'); };
+    const loveEye = x => {
+      ['.h.h.', 'hhhhh', 'hhhhh', '.hhh.', '..h..'].forEach((row, j) => {
+        [...row].forEach((ch, i) => { if (ch === 'h') put(x + i, 12 + j, 'h'); });
+      });
+    };
+    if (mood === 'love') { loveEye(8); loveEye(19); }
+    else if (mood === 'happy') { arc(9); arc(20); }
+    else if (mood === 'wink') { eye(9); arc(20); }
+    else { eye(9); eye(20); }
+
+    // cheeks, nose, mouth
+    blk(6, 18, 3, 2, 'm'); blk(23, 18, 3, 2, 'm');
+    blk(15, 17, 2, 1, 'p');
+    const sad = mood === 'sad' || mood === 'cry';
+    if (sad) { put(15, 18, 'o'); put(16, 18, 'o'); put(14, 19, 'o'); put(17, 19, 'o'); }
+    else { put(14, 18, 'o'); put(17, 18, 'o'); put(15, 19, 'o'); put(16, 19, 'o'); }
+    if (mood === 'wink' || mood === 'happy' || mood === 'love') { blk(15, 20, 2, 2, 't'); }
+    if (sad) {
+      put(9, 12, 'o'); put(10, 12, 'o'); put(11, 11, 'o');
+      put(22, 12, 'o'); put(21, 12, 'o'); put(20, 11, 'o');
+      blk(11, 17, 1, 3, 'b');
+      if (mood === 'cry') { blk(11, 17, 1, 4, 'b'); blk(20, 17, 1, 4, 'b'); }
+    }
+
+    // chin line where the head sits on the body
+    for (let x = 12; x <= 19; x++) put(x, 24, 'o');
+
+    // flower
+    const fx = 22, fy = 27, cells = new Set();
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+      const d = dx * dx + dy * dy;
+      if (d <= 9) { cells.add((fy + dy) * W + fx + dx); put(fx + dx, fy + dy, d <= 2 ? 'y' : 'f'); }
+    }
+    [[-2,-2],[2,-2],[-2,2],[2,2]].forEach(([dx, dy]) => put(fx + dx, fy + dy, 'p'));
+    const ring = [];
+    cells.forEach(k => {
+      const x = k % W, y = (k - x) / W;
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => {
+        if (!cells.has((y + dy) * W + x + dx)) ring.push([x + dx, y + dy]);
+      });
+    });
+    ring.forEach(([x, y]) => put(x, y, 'o'));
+    for (let y = 32; y < H; y++) { put(fx, y, 'l'); put(fx - 1, y, 'o'); put(fx + 1, y, 'o'); }
+    put(fx + 1, 32, 'l'); put(fx + 2, 31, 'l'); put(fx + 2, 32, 'o');
+    return g;
+  }
+
+  function toSVG(g, color) {
+    const h = g.length, w = g[0].length;
+    let out = '';
+    for (let y = 0; y < h; y++) {
+      let x = 0;
+      while (x < w) {
+        const c = g[y][x];
+        if (c === '.') { x++; continue; }
+        let e = x; while (e < w && g[y][e] === c) e++;
+        out += `<rect x="${x}" y="${y}" width="${e - x}" height="1.02" fill="${color || PAL[c]}"/>`;
+        x = e;
+      }
+    }
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${out}</svg>`;
+  }
+  const fromRows = (rows, c) => rows.map(r => [...r].map(ch => ch === '#' ? c : '.'));
+  const HEART = ['.##.##.', '#######', '#######', '.#####.', '..###..', '...#...'];
+  const STAR = ['...#...', '..###..', '#######', '.#####.', '..###..', '.##.##.', '.#...#.'];
+  const SPARK = ['...#...', '...#...', '..###..', '#######', '..###..', '...#...', '...#...'];
+  /*END_SPRITES*/
+
+  const $ = (id) => document.getElementById(id);
+  const yes = $("yes"), no = $("no"), stage = $("stage"), sticker = $("sticker");
+
+  $("title").textContent = "Hey " + CONFIG.hisName + ",";
+  document.title = "A question from " + CONFIG.yourName;
+  sticker.innerHTML = toSVG(catGrid('neutral'));
+
+  // scattered stars and squiggles, like the doodle background
+  (function deco() {
+    const d = $("deco");
+    const pieces = [
+      [4, 6, STAR, '#ffe27a', 30], [88, 5, SPARK, '#62c4a8', 26], [10, 40, SPARK, '#ffe27a', 22],
+      [90, 36, STAR, '#ffe27a', 26], [5, 74, SPARK, '#62c4a8', 28], [86, 70, SPARK, '#ffe27a', 24],
+      [46, 3, SPARK, '#62c4a8', 20], [48, 92, STAR, '#ffe27a', 28], [14, 90, STAR, '#ffe27a', 22],
+      [80, 90, SPARK, '#62c4a8', 24]
+    ];
+    pieces.forEach(([l, t, rows, c, s]) => {
+      const el = document.createElement('div');
+      el.style.cssText = `left:${l}%;top:${t}%;width:${s}px`;
+      el.innerHTML = toSVG(fromRows(rows, c));
+      d.appendChild(el);
+    });
+    const curl = '<svg viewBox="0 0 24 24" width="100%" fill="none" stroke="#9aa4e8" stroke-width="2.6" stroke-linecap="round"><path d="M3 16C1 6 14 2 15 10S6 18 15 20 22 14 21 10"/></svg>';
+    [[22, 14, 38, -10], [74, 20, 34, 25], [30, 80, 36, 190], [70, 82, 32, 90]].forEach(([l, t, s, r]) => {
+      const el = document.createElement('div');
+      el.style.cssText = `left:${l}%;top:${t}%;width:${s}px;transform:rotate(${r}deg)`;
+      el.innerHTML = curl;
+      d.appendChild(el);
+    });
+  })();
+
+  const asks = [
+    "Will you go on a date with me?",
+    "Are you sure? Please say yes...",
+    "Pretty please? One little date?",
+    "Think again... I'll be so sad",
+    "You're breaking my heart",
+    "I'm not giving up, you know",
+    "I'll keep asking until you say yes",
+    "Just one date. Please, please?",
+    "Okay, I'll ask again... will you?",
+    "I can do this all day"
+  ];
+  const moods = ['neutral', 'sad', 'cry', 'sad', 'cry', 'sad', 'cry', 'sad', 'sad', 'cry'];
+  let tries = 0;
+
+  function askAgain() {
+    tries++;
+    const i = tries < asks.length ? tries : 1 + ((tries - 1) % (asks.length - 1));
+    $("q").textContent = asks[i];
+    sticker.innerHTML = toSVG(catGrid(moods[i]));
+    $("counter").textContent = "Times I've asked: " + (tries + 1);
+    yes.style.setProperty("--ys", Math.min(1 + tries * 0.1, 1.6));
+    no.style.setProperty("--ns", Math.max(1 - tries * 0.07, 0.65));
+    stage.classList.remove("shake");
+    void stage.offsetWidth;
+    stage.classList.add("shake");
+  }
+  no.addEventListener("click", askAgain);
+
+  function hearts(n) {
+    const colors = ['#e8456b', '#ff8fb1', '#8a5f52', '#ff6f9f'];
+    for (let i = 0; i < n; i++) {
+      const el = document.createElement("span");
+      el.className = "heart";
+      el.innerHTML = toSVG(fromRows(HEART, colors[i % colors.length]));
+      el.style.left = Math.random() * 96 + "vw";
+      el.style.width = 18 + Math.random() * 26 + "px";
+      el.style.setProperty("--d", 2.2 + Math.random() * 2.4 + "s");
+      el.style.animationDelay = Math.random() * 0.8 + "s";
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 6000);
+    }
+  }
+
+  yes.addEventListener("click", () => {
+    stage.classList.remove("shake");
+    stage.classList.add("done");
+    sticker.innerHTML = toSVG(catGrid('love'));
+    $("yayTitle").textContent = "Yay! It's a date, " + CONFIG.hisName + "!";
+    $("yaySub").textContent = tries > 0
+      ? "Finally! I knew you'd say yes. Here are the details:"
+      : "I'm so excited. Here are the details:";
+
+    const box = $("details");
+    box.innerHTML = "";
+    const add = (k, v, hint) => {
+      const d = document.createElement("div"); d.className = "item";
+      const b = document.createElement("b"); b.textContent = k;
+      const s = document.createElement("span"); s.textContent = v;
+      if (hint) {
+        const h = document.createElement("span"); h.className = "hint"; h.textContent = hint;
+        s.appendChild(h);
+      }
+      d.append(b, s); box.appendChild(d);
+    };
+    add("Plan", CONFIG.plan);
+    add("When", CONFIG.when);
+    add("Where", CONFIG.where);
+    if (CONFIG.note) add("Note", CONFIG.note, CONFIG.noteHint);
+
+    if (CONFIG.replyLink) {
+      const a = document.createElement("a");
+      a.className = "reply"; a.href = CONFIG.replyLink;
+      a.textContent = "Tell " + CONFIG.yourName + " you said yes";
+      $("replyWrap").appendChild(a);
+    }
+    hearts(36);
+    setTimeout(() => hearts(24), 1400);
+  });
+</script>
+</body>
+</html>
